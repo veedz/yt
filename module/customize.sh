@@ -1,4 +1,17 @@
 . "$MODPATH/config"
+RVAPPVER="$(grep_prop version "$MODPATH/module.prop")"
+CACHE=/sdcard/Android/data/com.google.android.youtube
+
+case $(getprop ro.build.version.sdk) in
+	27|28|29|30|31|32|33)
+		rm -rf /data/data/$PKG_NAME/cache
+		rm -rf /data/data/$PKG_NAME/code_cache
+		;;
+	32|33|34|35|36)
+		rm -rf /data_mirror/data_ce/null/0/$PKG_NAME/cache
+		rm -rf /data_mirror/data_ce/null/0/$PKG_NAME/code_cache
+		;;
+esac
 
 ui_print ""
 if [ -n "$MODULE_ARCH" ] && [ "$MODULE_ARCH" != "$ARCH" ]; then
@@ -174,6 +187,8 @@ ui_print "* Optimizing $PKG_NAME"
 
 cmd package compile -m speed-profile -f "$PKG_NAME"
 # nohup cmd package compile -m speed-profile -f "$PKG_NAME" >/dev/null 2>&1
+cmd appops set com.google.android.youtube RUN_IN_BACKGROUND ignore
+cmd appops set com.google.android.youtube RUN_ANY_IN_BACKGROUND ignore
 
 if [ "$KSU" ]; then
 	UID=$(dumpsys package "$PKG_NAME" 2>&1 | grep -m1 uid)
@@ -192,8 +207,15 @@ if [ "$KSU" ]; then
 	fi
 fi
 
+if [ "$CACHE" ]; then
+  rm -rf $CACHE/cache
+  mkdir -p $CACHE
+  touch $CACHE/cache
+fi
+
 rm -rf "${MODPATH:?}/bin" "$MODPATH/$PKG_NAME.apk"
 
 ui_print "* Done"
 ui_print "  by j-hc (github.com/j-hc)"
+ui_print "  remod by hafizd"
 ui_print " "
