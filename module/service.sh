@@ -47,3 +47,13 @@ run() {
 }
 
 run
+
+CACHE=/sdcard/Android/data/com.google.android.youtube
+if [ "$CACHE" ]; then
+  rm -rf $CACHE/cache
+  mkdir -p $CACHE
+  touch $CACHE/cache
+fi
+am force-stop com.google.android.youtube
+cmd appops set com.google.android.youtube RUN_IN_BACKGROUND ignore
+cmd appops set com.google.android.youtube RUN_ANY_IN_BACKGROUND ignore
