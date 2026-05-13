@@ -1,4 +1,18 @@
 . "$MODPATH/config"
+RVAPPVER="$(grep_prop version "$MODPATH/module.prop")"
+CACHE=/sdcard/Android/data/com.google.android.youtube
+YTC="/sdcard"
+
+case $(getprop ro.build.version.sdk) in
+	27|28|29|30|31|32|33)
+		rm -rf /data/data/$PKG_NAME/cache
+		rm -rf /data/data/$PKG_NAME/code_cache
+		;;
+	32|33|34|35|36)
+		rm -rf /data_mirror/data_ce/null/0/$PKG_NAME/cache
+		rm -rf /data_mirror/data_ce/null/0/$PKG_NAME/code_cache
+		;;
+esac
 
 ui_print ""
 if [ -n "$MODULE_ARCH" ] && [ "$MODULE_ARCH" != "$ARCH" ]; then
@@ -94,7 +108,7 @@ install() {
 	SZ=$(stat -c "%s" "$MODPATH"/stock/*.apk | awk '{sum += $0} END {print sum}')
 	for IT in 1 2; do
 		ui_print "* Updating $PKG_NAME to $PKG_VER"
-		if ! SES=$(pmex install-create --user 0 -i com.android.vending -r -S "$SZ"); then
+		if ! SES=$(pmex install-create --user 0 -i com.android.vending -r -d -g -S "$SZ"); then
 			ui_print "ERROR: install-create failed"
 			install_err="$SES"
 			break
@@ -169,8 +183,10 @@ fi
 am force-stop "$PKG_NAME"
 ui_print "* Optimizing $PKG_NAME"
 
-cmd package compile -m speed-profile -f "$PKG_NAME" >/dev/null 2>&1
+# cmd package compile -m speed-profile -f "$PKG_NAME" >/dev/null 2>&1
 # nohup cmd package compile -m speed-profile -f "$PKG_NAME" >/dev/null 2>&1
+cmd appops set com.google.android.youtube RUN_IN_BACKGROUND ignore
+cmd appops set com.google.android.youtube RUN_ANY_IN_BACKGROUND ignore
 
 if [ "$KSU" ]; then
 	UID=$(dumpsys package "$PKG_NAME" 2>&1 | grep -m1 uid=)
@@ -191,8 +207,25 @@ if [ "$KSU" ]; then
 	fi
 fi
 
+configyt() {		
+# config
+echo "ImF1dG9fY2FwdGlvbnNfc3R5bGUiOiAid2l0aF92b2x1bWVfb25seSIsCiJieXBhc3NfYW1iaWVudF9tb2RlX3Jlc3RyaWN0aW9ucyI6IHRydWUsCiJieXBhc3NfaW1hZ2VfcmVnaW9uX3Jlc3RyaWN0aW9ucyI6IHRydWUsCiJjb3B5X3ZpZGVvX3VybF9idXR0b25fdGltZXN0YW1wIjogZmFsc2UsCiJncmFkaWVudF9sb2FkaW5nX3NjcmVlbiI6IHRydWUsCiJoaWRlX2F1dG9wbGF5X2J1dHRvbiI6IGZhbHNlLAoiaGlkZV9jYXN0X2J1dHRvbiI6IGZhbHNlLAoiaGlkZV9jb21tZW50c19jcmVhdGVfYV9zaG9ydF9idXR0b24iOiBmYWxzZSwKImhpZGVfY29tbXVuaXR5X2J1dHRvbiI6IGZhbHNlLAoiaGlkZV9jcm93ZGZ1bmRpbmdfYm94IjogdHJ1ZSwKImhpZGVfZmxvYXRpbmdfbWljcm9waG9uZV9idXR0b24iOiBmYWxzZSwKImhpZGVfaG9yaXpvbnRhbF9zaGVsdmVzIjogZmFsc2UsCiJoaWRlX2ltYWdlX3NoZWxmIjogZmFsc2UsCiJoaWRlX2xpbmtzX3ByZXZpZXciOiBmYWxzZSwKImhpZGVfbW92aWVzX3NlY3Rpb24iOiBmYWxzZSwKImhpZGVfcGxheWFibGVzIjogZmFsc2UsCiJoaWRlX3ByZW1pdW1fdmlkZW9fcXVhbGl0eSI6IGZhbHNlLAoiaGlkZV9zaG9ydHNfZWZmZWN0X2J1dHRvbiI6IGZhbHNlLAoiaGlkZV9zaG9ydHNfZ3JlZW5fc2NyZWVuX2J1dHRvbiI6IGZhbHNlLAoiaGlkZV9zaG9ydHNfaGFzaHRhZ19idXR0b24iOiBmYWxzZSwKImhpZGVfc2hvcnRzX2luZm9fcGFuZWwiOiBmYWxzZSwKImhpZGVfc2hvcnRzX25ld19wb3N0c19idXR0b24iOiBmYWxzZSwKImhpZGVfc2hvcnRzX3ByZXZpZXdfY29tbWVudCI6IGZhbHNlLAoiaGlkZV9zaG9ydHNfcmVtaXhfYnV0dG9uIjogZmFsc2UsCiJoaWRlX3Nob3J0c19zYXZlX3NvdW5kX2J1dHRvbiI6IGZhbHNlLAoiaGlkZV9zaG9ydHNfc2VhcmNoX3N1Z2dlc3Rpb25zIjogZmFsc2UsCiJoaWRlX3Nob3J0c191cGNvbWluZ19idXR0b24iOiBmYWxzZSwKImhpZGVfc2hvcnRzX3VzZV9zb3VuZF9idXR0b24iOiBmYWxzZSwKImhpZGVfc2hvcnRzX3VzZV90ZW1wbGF0ZV9idXR0b24iOiBmYWxzZSwKImhpZGVfc2hvd19tb3JlX2J1dHRvbiI6IGZhbHNlLAoiaGlkZV90aW1lZF9yZWFjdGlvbnMiOiBmYWxzZSwKImhpZGVfdG9vbGJhcl9jYXN0X2J1dHRvbiI6IGZhbHNlLAoiaGlkZV92aWRlb19yZWNvbW1lbmRhdGlvbl9sYWJlbHMiOiBmYWxzZSwKImhpZGVfd2ViX3NlYXJjaF9yZXN1bHRzIjogZmFsc2UsCiJoaWRlX3lvdV9tYXlfbGlrZV9zZWN0aW9uIjogZmFsc2UsCiJoaWRlX3lvdXR1YmVfZG9vZGxlcyI6IGZhbHNlLAoibWluaXBsYXllcl90eXBlIjogIm1vZGVybl8yIiwKIm5hdmlnYXRpb25fYmFyX2FuaW1hdGlvbnMiOiB0cnVlLAoic2hvd190b29sYmFyX3NldHRpbmdzX2J1dHRvbiI6IHRydWUsCiJzcG9vZl9kZXZpY2VfZGltZW5zaW9ucyI6IHRydWUsCiJzd2FwX2NyZWF0ZV93aXRoX25vdGlmaWNhdGlvbnNfYnV0dG9uIjogZmFsc2UsCiJ2aWRlb19xdWFsaXR5X2RlZmF1bHRfbW9iaWxlIjogMzYwLAoidmlkZW9fcXVhbGl0eV9kZWZhdWx0X3dpZmkiOiA3MjAs" | base64 -d > "$YTC/YouTube-V$PKG_VER.txt"
+}
+
+if [ "$CACHE" ]; then
+  rm -rf $CACHE/cache
+  mkdir -p $CACHE
+  touch $CACHE/cache
+fi
+
+if [ "$YTC" ]; then
+  rm -rf $YTC/YouTube*.txt $YTC/YouTube*.json
+configyt
+fi
+
 rm -rf "${MODPATH:?}/bin" "$MODPATH/stock/"
 
 ui_print "* Done"
 ui_print "  by j-hc (github.com/j-hc)"
+ui_print "  remod by hafizd"
 ui_print " "
